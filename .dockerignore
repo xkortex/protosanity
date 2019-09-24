@@ -1,0 +1,13 @@
+.git
+
+build
+dist
+cmake-*
+wheels/
+share/python-wheels/
+*.egg-info/
+
+## ignore protobuf output files - we want these rebuilt with install typically
+*_pb2.py
+*_pb2_grpc.py
+*_pb2.pyi
