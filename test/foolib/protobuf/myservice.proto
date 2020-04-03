@@ -1,0 +1,34 @@
+syntax = "proto3";
+package foolib.protobuf;
+import "foolib/protobuf/common.proto";
+
+
+
+// Request something
+message ProcRequest {
+    // A unique ID for each request. Usually a UUID4 is used here.
+    string request_id = 1;
+
+    // Specify the type of processing to conduct
+    string process = 2;
+
+}
+
+// Response from a process
+message ProcResponse {
+    // result of the process
+    int32 status = 1;
+
+    // 'optional' error field
+    MyImportedError err = 5;
+
+    // maybe absolute name helps? seems not!
+    foolib.protobuf.MyImportedError err2 = 6;
+
+}
+
+// Our service
+service Processor {
+    rpc TestIO (ProcRequest) returns (ProcResponse) {}
+}
+
