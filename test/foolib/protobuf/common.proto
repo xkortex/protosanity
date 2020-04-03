@@ -10,11 +10,11 @@ message Empty {
 message MyImportedError {
     // Name of the error
     // Same as type(exception).__name__
-    string errtype = 1;
+    string exc_type = 1;
 
     // The error message
     // Same as str(exception)
-    string msg = 2;
+    string exc_val = 2;
 
     // Traceback of the error
     string traceback = 3;
