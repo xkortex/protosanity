@@ -12,12 +12,23 @@ message ProcRequest {
     // Specify the type of processing to conduct
     string process = 2;
 
+    // command name
+    string name = 3;
+    // command arguments
+    repeated string args = 4;
+
 }
 
 // Response from a process
 message ProcResponse {
     // result of the process
     int32 status = 1;
+
+    // output of stdout
+    bytes stdout = 3;
+
+    // output of stderr
+    bytes stderr = 4;
 
     // 'optional' error field
     MyImportedError err = 5;
