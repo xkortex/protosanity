@@ -7,15 +7,16 @@ from grpc_tools import protoc
 import shlex
 from glob import glob
 
-def protoc_main_minimal(argv_start_idx=0):
+def protoc_main_minimal(argv_start_idx=int(os.environ.get('PB_ARG_IDX', 0))):
     """
     Same as `python -m grpc_tools.protoc` but without injecting
+    env 'PB_ARG_IDX' sets the slice of sys.argv
     ['-I{}'.format(proto_include)]
     """
     print('sys.argv: {}'.format(sys.argv))
     sys.exit(protoc.main(sys.argv[argv_start_idx:]))
 
-def protoc_main(argv_start_idx=0):
+def protoc_main(argv_start_idx=int(os.environ.get('PB_ARG_IDX', 0))):
     """
         Same as `python -m grpc_tools.protoc`
         Does some weird injection of this path:
