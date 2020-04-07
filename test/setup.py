@@ -58,7 +58,7 @@ compile_protobufs(os.path.join(pkgname, 'protobuf'))
 
 setup(
     name=pkgname,
-    version='0.0.1',
+    version='0.0.2',
     script_name='setup.py',
     python_requires='>3.5',
     install_requires=deps,

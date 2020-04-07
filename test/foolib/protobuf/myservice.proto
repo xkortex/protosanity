@@ -41,5 +41,11 @@ message ProcResponse {
 // Our service
 service Processor {
     rpc TestIO (ProcRequest) returns (ProcResponse) {}
+    rpc Timeit (Empty) returns (TimeMsg) {}
+    rpc TimeBurst (TimeMsg) returns ( TimeMsg) {}
+    rpc TimeStream (stream Empty) returns (stream TimeMsg) {}
+    rpc TimeBidiStream (stream TimeMsg) returns (stream TimeMsg) {}
+    rpc CauseError (Empty) returns (Empty) {}
+    rpc SomeReply (Empty) returns (SomeMessage) {}
 }
 

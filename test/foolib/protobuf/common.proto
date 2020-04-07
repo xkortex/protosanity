@@ -19,3 +19,13 @@ message MyImportedError {
     // Traceback of the error
     string traceback = 3;
 }
+
+message TimeMsg {
+    int64 time_ns = 1;
+    int64 time_ns_src = 2;
+    int64 time_ns_dst = 3;
+}
+
+message SomeMessage {
+    string msg = 1;
+}
