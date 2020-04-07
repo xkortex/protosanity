@@ -16,6 +16,9 @@ from foolib.protobuf import common_pb2
 
 DEFAULT_PORT = 45654
 
+def add_time_to_pb(msg: common_pb2.TimeMsg) -> common_pb2.TimeMsg:
+    msg.time_ns_dst = time.time_ns()
+    return msg
 
 class Subprocesser(myservice_pb2_grpc.ProcessorServicer):
 
@@ -43,6 +46,31 @@ class Subprocesser(myservice_pb2_grpc.ProcessorServicer):
         print('Complete', flush=True)
         return result
 
+    def Timeit(self, request: common_pb2.Empty, context) -> common_pb2.TimeMsg:
+        # time.sleep(0.01)
+        return common_pb2.TimeMsg(time_ns=time.time_ns())
+
+    def TimeBurst(self, request: common_pb2.TimeMsg, context):
+        for i in range(3):
+            yield common_pb2.TimeMsg(time_ns_src=request.time_ns_src, time_ns_dst=time.time_ns())
+
+    def TimeStream(self, request_iterator, context):
+        yield from map(add_time_to_pb,
+                       map(lambda _: common_pb2.TimeMsg(),
+                           request_iterator()))
+
+    def TimeBidiStream(self, request_iterator, context):
+        yield from map(add_time_to_pb, request_iterator())
+
+    def CauseError(self, request, context):
+        raise Exception('OOPS OMG WTF did what you asked, boss')
+
+    def SomeReply(self, request, context: grpc.ServicerContext):
+
+        print(context.peer(), flush=True)
+        time.sleep(5)
+        return common_pb2.SomeMessage(msg='bar')
+
 
 def arg_parser():
     import argparse
@@ -63,12 +91,14 @@ def serve(host=None, port=DEFAULT_PORT):
 
     hostport = ':'.join([host, str(port)])
 
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-
+    # Disable port reuse cause it can lead to weird bugs if you leave a process running
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=3), options=(('grpc.so_reuseport', 0),))
+    servicer = Subprocesser()
     myservice_pb2_grpc.add_ProcessorServicer_to_server(
-        Subprocesser(), server)
+        servicer, server)
     server.add_insecure_port(hostport)
     print('starting server on {}'.format(hostport))
+    print(servicer.__dict__)
     server.start()
     try:
         while True:
