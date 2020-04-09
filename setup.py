@@ -41,5 +41,6 @@ setup(
     include_package_data=True,
     extras_require={
     },
+    entry_points={"console_scripts": ["protoc-gen-sanity = protosanity.protoc_gen_sanity:main"]},
     cmdclass=commands,
 )
