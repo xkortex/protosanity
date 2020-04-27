@@ -1,0 +1,6 @@
+version: '3'
+services:
+  protosanity:
+    build:
+      context: .
+    image: "${IMAGE_REG}protosanity:latest"
