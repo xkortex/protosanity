@@ -1,0 +1,31 @@
+syntax = "proto3";
+package foolib.protobuf;
+
+// Empty Request Message
+message Empty {
+}
+
+
+// An error wrapper message
+message MyImportedError {
+    // Name of the error
+    // Same as type(exception).__name__
+    string exc_type = 1;
+
+    // The error message
+    // Same as str(exception)
+    string exc_val = 2;
+
+    // Traceback of the error
+    string traceback = 3;
+}
+
+message TimeMsg {
+    int64 time_ns = 1;
+    int64 time_ns_src = 2;
+    int64 time_ns_dst = 3;
+}
+
+message SomeMessage {
+    string msg = 1;
+}
