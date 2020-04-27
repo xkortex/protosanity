@@ -12,12 +12,13 @@ import grpc
 
 from foolib.protobuf import myservice_pb2, myservice_pb2_grpc
 from foolib.protobuf import common_pb2
+from foolib.util import time_ns
 
 
 DEFAULT_PORT = 45654
 
 def add_time_to_pb(msg: common_pb2.TimeMsg) -> common_pb2.TimeMsg:
-    msg.time_ns_dst = time.time_ns()
+    msg.time_ns_dst = time_ns()
     return msg
 
 class Subprocesser(myservice_pb2_grpc.ProcessorServicer):
@@ -48,11 +49,11 @@ class Subprocesser(myservice_pb2_grpc.ProcessorServicer):
 
     def Timeit(self, request: common_pb2.Empty, context) -> common_pb2.TimeMsg:
         # time.sleep(0.01)
-        return common_pb2.TimeMsg(time_ns=time.time_ns())
+        return common_pb2.TimeMsg(time_ns=time_ns())
 
     def TimeBurst(self, request: common_pb2.TimeMsg, context):
         for i in range(3):
-            yield common_pb2.TimeMsg(time_ns_src=request.time_ns_src, time_ns_dst=time.time_ns())
+            yield common_pb2.TimeMsg(time_ns_src=request.time_ns_src, time_ns_dst=time_ns())
 
     def TimeStream(self, request_iterator, context):
         yield from map(add_time_to_pb,

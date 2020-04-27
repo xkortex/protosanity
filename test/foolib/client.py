@@ -3,6 +3,7 @@ import shlex
 
 import grpc
 from foolib.protobuf import myservice_pb2, myservice_pb2_grpc, common_pb2
+from foolib.util import time_ns
 
 
 HOST = 'localhost'
@@ -40,9 +41,9 @@ class Client(object):
     def test_latency(self):
         req = common_pb2.Empty()
 
-        start = time.time_ns()
+        start = time_ns()
         response = self.stub.Timeit(req)
-        end = time.time_ns()
+        end = time_ns()
         print('oneway: {:.6f} ms \nRTT   : {:.6f} ms'.format((response.time_ns - start)*1e-6, (end-start)*1e-6))
 
         # print('Client received: {}'.format(response.message))
@@ -51,11 +52,11 @@ class Client(object):
 
     def time_burst(self):
         msg = common_pb2.TimeMsg()
-        msg.time_ns_src = time.time_ns()
+        msg.time_ns_src = time_ns()
         for res in self.stub.TimeBurst(msg):
             print('___')
             print(res)
-            end = time.time_ns()
+            end = time_ns()
             print('oneway: {:.6f} ms \nRTT   : {:.6f} ms'.format((res.time_ns_dst - res.time_ns_src) * 1e-6, (end - res.time_ns_src) * 1e-6))
 
 
@@ -63,11 +64,11 @@ class Client(object):
 
         def genny():
             for i in range(count):
-                yield common_pb2.TimeMsg(time_ns_src=time.time_ns(),)
+                yield common_pb2.TimeMsg(time_ns_src=time_ns(),)
 
         for res in self.stub.TimeBidiStream(genny()):
             print(res)
-            end = time.time_ns()
+            end = time_ns()
             print('oneway: {:.6f} ms \nRTT   : {:.6f} ms'.format((res.time_ns_dst - res.time_ns_src) * 1e-6, (end - res.time_ns_src) * 1e-6))
 
     def some_msg(self):

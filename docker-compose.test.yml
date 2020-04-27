@@ -1,0 +1,9 @@
+version: '3'
+services:
+  test:
+    build:
+      context: .
+      dockerfile: test.df
+      args:
+        - "IMAGE_REG=${IMAGE_REG}"
+    image: "${IMAGE_REG}protosanity/test:latest"

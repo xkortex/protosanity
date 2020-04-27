@@ -1,0 +1,32 @@
+stages:
+  - build
+  - test
+  - deploy
+
+image:
+  name: docker/compose:1.23.2
+  entrypoint: [""]
+
+before_script:
+  - docker info
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+build:
+  stage: build
+  script:
+    - docker-compose build
+    - docker-compose -f docker-compose.test.yml build
+
+
+test:
+  stage: test
+  script:
+    - docker-compose  -f docker-compose.test.yml run test /src/protosanity/test/test_compile_pbs.sh
+    - docker-compose  -f docker-compose.test.yml run test /src/protosanity/test/test_health.sh
+
+
+deploy:
+  stage: deploy
+  script:
+    - docker-compose push
+
