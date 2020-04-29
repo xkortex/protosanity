@@ -52,3 +52,4 @@ clean:
 	rm -f foolib/protobuf/*_pb2.py
 	rm -f foolib/protobuf/*_pb2.pyi
 	rm -f foolib/protobuf/*_pb2_grpc.py
+	rm -f foolib/protobuf/*.pb.go

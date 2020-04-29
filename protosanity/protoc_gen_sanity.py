@@ -6,7 +6,6 @@ import google.protobuf.descriptor_pb2 as d
 from google.protobuf import json_format
 from google.protobuf.compiler import plugin_pb2 as plugin_pb2
 from mypy_protobuf import  Descriptors, PkgWriter, HEADER
-from vprint import vprint
 
 
 def generate_mypy_stubs(request, response, quiet):

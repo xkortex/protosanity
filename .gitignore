@@ -4,6 +4,7 @@
 *_pb2_grpc.py
 *_pb2.pyi
 *_pb2.json
+*.pb.go
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

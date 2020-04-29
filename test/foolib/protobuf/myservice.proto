@@ -1,5 +1,7 @@
 syntax = "proto3";
 package foolib.protobuf;
+option go_package = "foolib/protobuf";
+
 import "foolib/protobuf/common.proto";
 
 
@@ -45,6 +47,7 @@ service Processor {
     rpc TimeBurst (TimeMsg) returns ( TimeMsg) {}
     rpc TimeStream (stream Empty) returns (stream TimeMsg) {}
     rpc TimeBidiStream (stream TimeMsg) returns (stream TimeMsg) {}
+    rpc StrBidiStream (stream SomeMessage) returns (stream SomeMessage) {}
     rpc CauseError (Empty) returns (Empty) {}
     rpc SomeReply (Empty) returns (SomeMessage) {}
 }
