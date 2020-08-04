@@ -17,9 +17,16 @@ from foolib.util import time_ns
 
 DEFAULT_PORT = 45654
 
+
+def beat():
+    print('.', end='', flush=True)
+    time.sleep(0.48)
+
+
 def add_time_to_pb(msg: common_pb2.TimeMsg) -> common_pb2.TimeMsg:
     msg.time_ns_dst = time_ns()
     return msg
+
 
 class Subprocesser(myservice_pb2_grpc.ProcessorServicer):
 
@@ -62,6 +69,24 @@ class Subprocesser(myservice_pb2_grpc.ProcessorServicer):
 
     def TimeBidiStream(self, request_iterator, context):
         yield from map(add_time_to_pb, request_iterator())
+
+    def StrBidiStream(self, request_iterator, context):
+        i = 0
+        for req in request_iterator:
+            print(req, flush=True)
+            beat()
+            beat()
+            beat()
+            beat()
+            print('? REPLY', flush=True)
+            yield common_pb2.SomeMessage(msg='!Howdy, this is server {}!'.format(i))
+            print(i)
+            beat()
+            beat()
+            beat()
+            beat()
+            print('! RECEIVE', flush=True)
+            i +=1
 
     def CauseError(self, request, context):
         raise Exception('OOPS OMG WTF did what you asked, boss')

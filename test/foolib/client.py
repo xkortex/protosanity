@@ -9,6 +9,12 @@ from foolib.util import time_ns
 HOST = 'localhost'
 PORT = 45654
 
+
+def beat():
+    print('.', end='', flush=True)
+    time.sleep(0.48)
+
+
 class Client(object):
     def __init__(self, host=None, port=PORT):
         if host is None:
@@ -71,6 +77,30 @@ class Client(object):
             end = time_ns()
             print('oneway: {:.6f} ms \nRTT   : {:.6f} ms'.format((res.time_ns_dst - res.time_ns_src) * 1e-6, (end - res.time_ns_src) * 1e-6))
 
+    def stream_chat(self, count=5):
+        def genny():
+            for i in range(count):
+                print('__FIRE__', flush=True)
+                yield common_pb2.SomeMessage(msg='?Hello, this is client {}?'.format(i))
+                beat()
+                beat()
+                beat()
+                beat()
+                beat()
+                beat()
+                beat()
+                beat()
+                print('?', flush=True)
+
+        for res in self.stub.StrBidiStream(genny()):
+            print(res, flush=True)
+            # beat()
+            # beat()
+            # beat()
+            # beat()
+            print('!', flush=True)
+
+
     def some_msg(self):
         print(self.stub.SomeReply(common_pb2.Empty()))
 
@@ -114,7 +144,6 @@ def arg_parser():
 
 
 if __name__ == '__main__':
-    # print('vprint on {}'.format(socket.gethostname()))
     args = arg_parser().parse_args()
     # print('{}'.format(args))
     c = Client(args.host, args.port)
@@ -140,7 +169,7 @@ if __name__ == '__main__':
         exit()
 
     if args.stream_bidi:
-        c.stream_some_times()
+        c.stream_chat()
         exit()
 
     out = c.run_client(args.cmd)

@@ -1,5 +1,6 @@
 syntax = "proto3";
 package foolib.protobuf;
+option go_package = "foolib/protobuf";
 
 // Empty Request Message
 message Empty {

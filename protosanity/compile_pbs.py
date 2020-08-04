@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os
-from grpc_tools import protoc
 import re
 from glob import glob
 import warnings
+from grpc_tools import protoc
 
 try:
     import mypy_protobuf
@@ -51,20 +51,38 @@ def has_service(protofile_path):
         return any(text_has_service(l) for l in fp.readlines())
 
 
-def form_command(protofile_path, target_path='.'):
+def form_command(protofile_path, target_path='.', plugins=(), other_proto_paths=()):
+    # todo: add switching for automatic grpc build, see `has_service`
     commands = [
         '--proto_path=' + target_path,
         '--python_out=' + target_path,
-        '--grpc_python_out=' + target_path,
     ]
+    commands += ['--proto_path=' + pp for pp in other_proto_paths]
+
+    HAS_SERVICE = has_service(protofile_path)
+    HAS_GO = any(x in plugins for x in ["go", "grpc_go"])
+
+    if HAS_SERVICE:
+        commands.append('--grpc_python_out=' + target_path)
+        if 'grpc_go' in plugins:
+            commands.append('--go_out=plugins=grpc:' + target_path)
+    else:
+        if HAS_GO:
+            commands.append('--go_out=' + target_path)
+    if HAS_GO:
+        # if you don't have this option, protoc will put the file at
+        # $BASEDIR/go/package/path
+        commands.append('--go_opt=paths=source_relative')
+
     if HAS_MYPY_PROTOBUF:
         commands.append('--mypy_out=' + target_path)
 
     commands.append(protofile_path)
+    print(commands)
     return commands
 
 
-def compile_protobufs(proto_path='pkgname/proto', relpath='', *args):
+def compile_protobufs(proto_path='pkgname/proto', relpath='', plugins=(), other_proto_paths=(), *args):
     """compile the protobuf files.
     A few notes:
         - Madness this way lies.
@@ -108,10 +126,11 @@ def compile_protobufs(proto_path='pkgname/proto', relpath='', *args):
     print('<compile_pb> {}'.format(filenames))
 
     for fn in filenames:
-        cmdf = form_command(fn)
-        print('<compile_pb> protoc {}'.format(cmdf))
+        cmdf = form_command(fn, plugins=plugins, other_proto_paths=other_proto_paths)
+        print('<compile_pb> protoc {}'.format(' '.join(cmdf)))
         pkg = get_package(fn)
         expected_dir = os.path.join('.', *pkg.split('.'))
+        # todo: actually seems like this can work as long as the last part of the namespace matches
         if expected_dir != os.path.dirname(fn):
             msg = '<!><!><!><!>\n' \
                   'Package did not match expected directory structure. This will probably fail.' \
@@ -125,8 +144,55 @@ def compile_protobufs(proto_path='pkgname/proto', relpath='', *args):
             )
 
 
+def arg_parser():
+    import argparse
+    parser = argparse.ArgumentParser(description="""Helper script for compiling protobuf files.
+    Usage: python -m protosanity.compile_pbs path/to/proto_dir
+    
+    If proto_dir is absolute, you should specify -r /base/path such that the relpath of the
+    proto dir matches the package structure. E.g. if you have the structure:
+    /home/user/proj/foo/bar/*.proto
+    each with `package "foo.bar"`, you should run
+    
+    `python -m protosanity.compile_pbs -r /home/user/proj /home/user/proj/foo/bar` 
+    
+    Plugin options:
+     - go           - compile go protobufs
+     - grpc_go      - compile go grpc (implies go protobuf) 
+    
+    """)
+
+    parser.add_argument(
+        "-r", "--relpath_start", default=None, action="store", type=str,
+        help="Specify a base path of the proto dir. This may be needed if executing from"
+        "other than the base directory. "
+    )
+    parser.add_argument(
+        "-o", "--output_dir", default=None, action="store", type=str,
+        help="Output directory")
+    parser.add_argument('-p', '--plugin', action='append',
+                        help='Specify any number of plugins with `-p plugname`')
+
+    parser.add_argument("-I", "--proto_path", action="append", default=[],
+                        help="Additional proto_path to add to commands")
+    parser.add_argument(
+        'input', nargs=1, type=str,
+        help="Path to directory containing .proto files")
+    return parser
+
+
 if __name__ == '__main__':
-    import sys
-    if len(sys.argv) == 1:
-        raise ValueError('Usage: python -m protosanity.compile_pbs path/to/proto/dir')
-    compile_protobufs(*sys.argv[1:])
+    try:
+        args = arg_parser().parse_args()
+    except ValueError:
+        msg = """Invalid arguments specified.
+        Usage: python -m protosanity.compile_pbs path/to/proto/dir"""
+        raise ValueError(msg)
+
+    print(args)
+    allowed_plugins = ['go', 'grpc_go']
+    plugins = args.plugin or []
+    bad_plugins = list(filter(lambda x: x not in allowed_plugins, plugins))
+    if bad_plugins:
+        raise ValueError('Not valid plugin(s): {}'.format(', '.join(bad_plugins)))
+    compile_protobufs(args.input[0], args.relpath_start, plugins=plugins, other_proto_paths=args.proto_path)
