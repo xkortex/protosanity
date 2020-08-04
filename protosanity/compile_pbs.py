@@ -51,12 +51,13 @@ def has_service(protofile_path):
         return any(text_has_service(l) for l in fp.readlines())
 
 
-def form_command(protofile_path, target_path='.', plugins=()):
+def form_command(protofile_path, target_path='.', plugins=(), other_proto_paths=()):
     # todo: add switching for automatic grpc build, see `has_service`
     commands = [
         '--proto_path=' + target_path,
         '--python_out=' + target_path,
     ]
+    commands += ['--proto_path=' + pp for pp in other_proto_paths]
 
     HAS_SERVICE = has_service(protofile_path)
     HAS_GO = any(x in plugins for x in ["go", "grpc_go"])
@@ -77,10 +78,11 @@ def form_command(protofile_path, target_path='.', plugins=()):
         commands.append('--mypy_out=' + target_path)
 
     commands.append(protofile_path)
+    print(commands)
     return commands
 
 
-def compile_protobufs(proto_path='pkgname/proto', relpath='', plugins=(), *args):
+def compile_protobufs(proto_path='pkgname/proto', relpath='', plugins=(), other_proto_paths=(), *args):
     """compile the protobuf files.
     A few notes:
         - Madness this way lies.
@@ -124,10 +126,11 @@ def compile_protobufs(proto_path='pkgname/proto', relpath='', plugins=(), *args)
     print('<compile_pb> {}'.format(filenames))
 
     for fn in filenames:
-        cmdf = form_command(fn, plugins=plugins)
+        cmdf = form_command(fn, plugins=plugins, other_proto_paths=other_proto_paths)
         print('<compile_pb> protoc {}'.format(' '.join(cmdf)))
         pkg = get_package(fn)
         expected_dir = os.path.join('.', *pkg.split('.'))
+        # todo: actually seems like this can work as long as the last part of the namespace matches
         if expected_dir != os.path.dirname(fn):
             msg = '<!><!><!><!>\n' \
                   'Package did not match expected directory structure. This will probably fail.' \
@@ -139,6 +142,7 @@ def compile_protobufs(proto_path='pkgname/proto', relpath='', plugins=(), *args)
             raise RuntimeError(
                 'Protobuf failed. Run Setup with --verbose to see why'
             )
+
 
 def arg_parser():
     import argparse
@@ -168,6 +172,9 @@ def arg_parser():
         help="Output directory")
     parser.add_argument('-p', '--plugin', action='append',
                         help='Specify any number of plugins with `-p plugname`')
+
+    parser.add_argument("-I", "--proto_path", action="append", default=[],
+                        help="Additional proto_path to add to commands")
     parser.add_argument(
         'input', nargs=1, type=str,
         help="Path to directory containing .proto files")
@@ -184,7 +191,8 @@ if __name__ == '__main__':
 
     print(args)
     allowed_plugins = ['go', 'grpc_go']
-    bad_plugins = list(filter(lambda x: x not in allowed_plugins, args.plugin))
+    plugins = args.plugin or []
+    bad_plugins = list(filter(lambda x: x not in allowed_plugins, plugins))
     if bad_plugins:
         raise ValueError('Not valid plugin(s): {}'.format(', '.join(bad_plugins)))
-    compile_protobufs(args.input[0], args.relpath_start, plugins=args.plugin)
+    compile_protobufs(args.input[0], args.relpath_start, plugins=plugins, other_proto_paths=args.proto_path)

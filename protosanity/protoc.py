@@ -4,13 +4,13 @@
 from grpc_tools import protoc
 
 
-def protoc_main_minimal(command_arguments):
+def protoc_main_minimal(command_arguments, proto_paths=()):
     """
     Same as `python -m grpc_tools.protoc` but without injecting
     ['-I{}'.format(proto_include)].
     This is a fix to be able to actually compile grpc proto files correctly when import is involved.
     """
-    sys.exit(protoc.main(command_arguments))
+    sys.exit(protoc.main(list(proto_paths) + command_arguments))
 
 
 if __name__ == '__main__':

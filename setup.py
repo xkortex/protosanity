@@ -19,7 +19,6 @@ print('Packages:', packages)
 # common dependencies
 # todo: fully test unified dependencies
 deps = [
-    'typing',
     'pyyaml',
     'grpcio>=1.22',
     'grpcio-tools',

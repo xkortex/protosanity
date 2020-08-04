@@ -87,3 +87,4 @@ venv.bak/
 cmake-*
 .spyderproject
 .spyproject
+.DS_Store
